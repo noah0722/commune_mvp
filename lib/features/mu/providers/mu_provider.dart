@@ -1,4 +1,4 @@
-// #File: lib/features/mu/providers/mu_provider.dart
+// lib/features/mu/providers/mu_provider.dart
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -7,8 +7,9 @@ import 'package:commune/core/services/user_service.dart';
 
 final muProvider = StreamProvider.family<Mu?, String>((ref, muId) {
   final db = FirebaseFirestore.instance;
-  
-  return db.collection('mus')
+
+  return db
+      .collection('mus')
       .doc(muId)
       .snapshots()
       .map((doc) => doc.exists ? Mu.fromFirestore(doc) : null);
@@ -20,14 +21,32 @@ final muServiceProvider = Provider<MuService>((ref) {
 });
 
 class MuService {
+  MuService(this._userService);
   final _db = FirebaseFirestore.instance;
   final UserService _userService;
 
-  MuService(this._userService);
-
   Future<void> joinMu(String userId, String muId) async {
     try {
-      await _userService.joinMu(userId, muId);
+      final batch = _db.batch();
+
+      // Update user's joined Mus
+      batch.update(
+        _db.collection('users').doc(userId),
+        {
+          'joinedMus': FieldValue.arrayUnion([muId]),
+        },
+      );
+
+      // Update Mu's member count
+      batch.update(
+        _db.collection('mus').doc(muId),
+        {
+          'memberCount': FieldValue.increment(1),
+          'lastActivityAt': FieldValue.serverTimestamp(),
+        },
+      );
+
+      await batch.commit();
     } catch (e) {
       throw _handleError(e);
     }
@@ -35,7 +54,26 @@ class MuService {
 
   Future<void> leaveMu(String userId, String muId) async {
     try {
-      await _userService.leaveMu(userId, muId);
+      final batch = _db.batch();
+
+      // Update user's joined Mus
+      batch.update(
+        _db.collection('users').doc(userId),
+        {
+          'joinedMus': FieldValue.arrayRemove([muId]),
+        },
+      );
+
+      // Update Mu's member count
+      batch.update(
+        _db.collection('mus').doc(muId),
+        {
+          'memberCount': FieldValue.increment(-1),
+          'lastActivityAt': FieldValue.serverTimestamp(),
+        },
+      );
+
+      await batch.commit();
     } catch (e) {
       throw _handleError(e);
     }
@@ -45,16 +83,6 @@ class MuService {
     try {
       await _db.collection('mus').doc(muId).update({
         'lastActivityAt': FieldValue.serverTimestamp(),
-      });
-    } catch (e) {
-      throw _handleError(e);
-    }
-  }
-
-  Future<void> incrementPostCount(String muId) async {
-    try {
-      await _db.collection('mus').doc(muId).update({
-        'postCount': FieldValue.increment(1),
       });
     } catch (e) {
       throw _handleError(e);

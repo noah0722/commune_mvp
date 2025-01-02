@@ -1,7 +1,8 @@
-// #File: lib/features/navigation/widgets/bottom_nav_bar.dart
+// lib/features/navigation/widgets/bottom_nav_bar.dart
 import 'package:commune/core/models/user.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart'; // Add this import
 import 'package:commune/core/constants/app_strings.dart';
 import 'package:commune/core/providers/auth_provider.dart';
 import 'package:commune/features/notification/providers/notification_provider.dart';
@@ -14,8 +15,29 @@ class BottomNavBar extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final selectedIndex = ref.watch(selectedNavIndexProvider);
+    final authState = ref.watch(authStateProvider);
+
+    return authState.when(
+      data: (user) => _buildNavBar(context, ref, selectedIndex, user),
+      loading: _buildLoadingNavBar,
+      error: (_, __) => _buildNavBar(context, ref, selectedIndex, null),
+    );
+  }
+
+  Widget _buildLoadingNavBar() {
+    return BottomNavigationBar(
+      items: const [
+        BottomNavigationBarItem(
+          icon: Icon(Icons.home),
+          label: AppStrings.home,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildNavBar(
+      BuildContext context, WidgetRef ref, int selectedIndex, User? user) {
     final unreadCount = ref.watch(unreadNotificationCountProvider).value ?? 0;
-    final user = ref.watch(authStateProvider).value;
 
     return BottomNavigationBar(
       currentIndex: selectedIndex,
@@ -101,7 +123,7 @@ class BottomNavBar extends ConsumerWidget {
           action: SnackBarAction(
             label: AppStrings.login,
             onPressed: () {
-              Navigator.pushNamed(context, '/login');
+              context.go('/login'); // Use GoRouter
             },
           ),
           behavior: SnackBarBehavior.floating,
@@ -115,19 +137,19 @@ class BottomNavBar extends ConsumerWidget {
 
     switch (index) {
       case 0:
-        Navigator.pushReplacementNamed(context, '/');
+        context.go('/'); // Use GoRouter
         break;
       case 1:
-        Navigator.pushReplacementNamed(context, '/mu');
+        context.go('/mu'); // Use GoRouter
         break;
       case 2:
-        Navigator.pushNamed(context, '/write');
+        context.go('/write'); // Use GoRouter
         break;
       case 3:
-        Navigator.pushReplacementNamed(context, '/ranking');
+        context.go('/ranking'); // Use GoRouter
         break;
       case 4:
-        Navigator.pushReplacementNamed(context, '/notifications');
+        context.go('/notifications'); // Use GoRouter
         break;
     }
   }

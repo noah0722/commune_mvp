@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -11,7 +12,8 @@ import 'package:commune/core/services/notification_service.dart';
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   try {
     await Firebase.initializeApp(
-        options: DefaultFirebaseOptions.currentPlatform);
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
     debugPrint('Handling background message: ${message.messageId}');
   } catch (e) {
     debugPrint('Error handling background message: $e');
@@ -22,9 +24,15 @@ void main() async {
   try {
     WidgetsFlutterBinding.ensureInitialized();
 
-    // Firebase initialization
     await Firebase.initializeApp(
       options: DefaultFirebaseOptions.currentPlatform,
+    );
+
+    // Enable offline persistence for Firestore
+    await FirebaseFirestore.instance.enablePersistence();
+    FirebaseFirestore.instance.settings = const Settings(
+      persistenceEnabled: true,
+      cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
     );
 
     // FCM setup
@@ -33,7 +41,6 @@ void main() async {
     try {
       await NotificationService().initialize();
 
-      // Request notification permissions
       final messaging = FirebaseMessaging.instance;
       await messaging.requestPermission(
         alert: true,
@@ -41,12 +48,10 @@ void main() async {
         sound: true,
       );
 
-      // Get FCM token
       final token = await messaging.getToken();
       debugPrint('FCM Token: $token');
     } catch (e) {
       debugPrint('Notification setup error (non-fatal): $e');
-      // Continue app initialization even if notifications fail
     }
 
     runApp(
@@ -57,7 +62,6 @@ void main() async {
   } catch (e, stack) {
     debugPrint('Error during initialization: $e');
     debugPrint('Stack trace: $stack');
-    // Show error UI if initialization fails
     runApp(
       MaterialApp(
         home: Scaffold(
@@ -75,14 +79,12 @@ class CommuneApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final router = ref.watch(routerProvider);
-
     return MaterialApp.router(
       title: 'Commune',
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
       themeMode: ThemeMode.system,
-      routerConfig: router,
+      routerConfig: ref.watch(routerProvider),
       debugShowCheckedModeBanner: false,
       localizationsDelegates: const [
         GlobalMaterialLocalizations.delegate,
@@ -90,15 +92,14 @@ class CommuneApp extends ConsumerWidget {
         GlobalCupertinoLocalizations.delegate,
       ],
       supportedLocales: const [
-        Locale('ko', 'KR'), // Korean
-        Locale('en', 'US'), // English
-        Locale('es', 'ES'), // Spanish
-        Locale('id', 'ID'), // Indonesian
-        Locale('fr', 'FR'), // French
-        Locale('ja', 'JP'), // Japanese
+        Locale('ko', 'KR'),
+        Locale('en', 'US'),
+        Locale('es', 'ES'),
+        Locale('id', 'ID'),
+        Locale('fr', 'FR'),
+        Locale('ja', 'JP'),
       ],
       builder: (context, child) {
-        // Apply font scale
         return MediaQuery(
           data: MediaQuery.of(context).copyWith(
             textScaler: const TextScaler.linear(1.0),

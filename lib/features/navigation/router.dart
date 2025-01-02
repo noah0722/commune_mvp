@@ -47,20 +47,23 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
     ],
     redirect: (context, state) {
-      final user = ref.read(authStateProvider).value;
-      final isLoggedIn = user != null;
+      final authState = ref.read(authStateProvider);
+      return authState.when(
+        data: (user) {
+          final isLoggedIn = user != null;
+          final isLoggingIn = state.matchedLocation == '/login';
 
-      final isLoggingIn = state.matchedLocation == '/login';
-
-      if (!isLoggedIn && !isLoggingIn && _requiresAuth(state.matchedLocation)) {
-        return '/login';
-      }
-
-      if (isLoggedIn && isLoggingIn) {
-        return '/';
-      }
-
-      return null;
+          if (isLoggedIn && isLoggingIn) {
+            return '/'; // Redirect to home if logged in and trying to access login
+          }
+          if (!isLoggedIn && _requiresAuth(state.matchedLocation)) {
+            return '/login'; // Redirect to login if not logged in and accessing protected route
+          }
+          return null; // No redirect
+        },
+        loading: () => null,
+        error: (_, __) => '/login',
+      );
     },
   );
 });

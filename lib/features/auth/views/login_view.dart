@@ -1,9 +1,11 @@
-import 'package:commune/core/constants/app_colors.dart';
+// lib/features/auth/views/login_view.dart
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:commune/core/providers/auth_provider.dart';
 import 'package:commune/core/constants/app_strings.dart';
-import 'package:flutter_svg/svg.dart';
+import 'package:commune/core/constants/app_colors.dart';
 
 class LoginView extends ConsumerWidget {
   const LoginView({super.key});
@@ -32,22 +34,30 @@ class LoginView extends ConsumerWidget {
                 ),
               ),
               const SizedBox(height: 48),
-              _buildLoginButton(
-                context: context,
-                ref: ref,
-                title: AppStrings.loginWithGoogle,
-                icon: 'assets/icons/google.svg',
-                backgroundColor: AppColors.googleButton,
+              ElevatedButton(
                 onPressed: () => _handleGoogleLogin(context, ref),
-              ),
-              const SizedBox(height: 16),
-              _buildLoginButton(
-                context: context,
-                ref: ref,
-                title: AppStrings.loginWithNaver,
-                icon: 'assets/icons/naver.svg',
-                backgroundColor: AppColors.naverButton,
-                onPressed: () => _handleNaverLogin(context, ref),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.googleButton,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 16,
+                    horizontal: 24,
+                  ),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.g_translate,
+                      size: Theme.of(context).textTheme.titleMedium?.fontSize,
+                    ),
+                    const SizedBox(width: 12),
+                    Text(
+                      AppStrings.loginWithGoogle,
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                  ],
+                ),
               ),
               const Spacer(),
             ],
@@ -57,64 +67,20 @@ class LoginView extends ConsumerWidget {
     );
   }
 
-  Widget _buildLoginButton({
-    required BuildContext context,
-    required WidgetRef ref,
-    required String title,
-    required String icon,
-    required Color backgroundColor,
-    required VoidCallback onPressed,
-  }) {
-    return ElevatedButton(
-      onPressed: onPressed,
-      style: ElevatedButton.styleFrom(
-        backgroundColor: backgroundColor,
-        foregroundColor: Colors.white,
-        padding: const EdgeInsets.symmetric(
-          horizontal: 24,
-          vertical: 16,
-        ),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          SvgPicture.asset(
-            icon,
-            width: 24,
-            height: 24,
-            color: Colors.white,
-          ),
-          const SizedBox(width: 12),
-          Text(title),
-        ],
-      ),
-    );
-  }
-
   Future<void> _handleGoogleLogin(BuildContext context, WidgetRef ref) async {
     try {
-      final result = await ref.read(authProvider).signInWithGoogle();
-      
+      await ref.read(authProvider).signInWithGoogle();
+
       if (context.mounted) {
-        if (result.isNewUser) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: const Text('환영해요!'),
-              behavior: SnackBarBehavior.floating,
-              showCloseIcon: true,
-            ),
-          );
-        }
-        Navigator.of(context).pushReplacementNamed('/');
+        // Force navigation to home and reset navigation stack
+        context.go('/');
       }
     } catch (e) {
+      debugPrint('Login error: $e');
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(e.toString()),
+            content: const Text('로그인에 실패했어요'),
             backgroundColor: Theme.of(context).colorScheme.error,
             behavior: SnackBarBehavior.floating,
             showCloseIcon: true,
@@ -122,15 +88,5 @@ class LoginView extends ConsumerWidget {
         );
       }
     }
-  }
-
-  Future<void> _handleNaverLogin(BuildContext context, WidgetRef ref) async {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(AppStrings.servicePreparation),
-        behavior: SnackBarBehavior.floating,
-        showCloseIcon: true,
-      ),
-    );
   }
 }

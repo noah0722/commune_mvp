@@ -6,6 +6,7 @@
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
   <meta name="description" content="A community service for anonymous discussions">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <!-- iOS meta tags & icons -->
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -19,46 +20,82 @@
   <title>Commune</title>
   <link rel="manifest" href="manifest.json">
 
+  <!-- Performance Optimizations -->
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link rel="preconnect" href="https://www.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
+
+  <!-- Google Identity Services -->
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+
+  <!-- Renderer Configuration -->
+  <script>
+    window.flutterWebRenderer = "html";
+    let serviceWorkerVersion = null;
+  </script>
+
   <!-- Firebase -->
-  <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-auth.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-firestore.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-storage.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-messaging.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app.js" defer></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-auth.js" defer></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-firestore.js" defer></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-storage.js" defer></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-messaging.js" defer></script>
 
+  <!-- Firebase Configuration -->
   <script>
-    const firebaseConfig = {
-      // Your web app's Firebase configuration
-    };
-    firebase.initializeApp(firebaseConfig);
+    window.addEventListener('load', function() {
+      const firebaseConfig = {
+        apiKey: "AIzaSyCQCMO2MVNn-6H1ZYG6kzwUpsLxe0N79xs",
+        authDomain: "commune-mvp.firebaseapp.com",
+        projectId: "commune-mvp",
+        storageBucket: "commune-mvp.firebasestorage.app",
+        messagingSenderId: "754049704230",
+        appId: "1:754049704230:web:cee5da174efa6db78461e7"
+      };
+      firebase.initializeApp(firebaseConfig);
+    });
   </script>
 
-  <script>
-    // Service worker registration
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('flutter-first-frame', function () {
-        navigator.serviceWorker.register('flutter_service_worker.js');
-        navigator.serviceWorker.register('firebase-messaging-sw.js');
-      });
-    }
-  </script>
-
-  <script src="main.dart.js" type="application/javascript"></script>
-</head>
-<body>
+  <!-- Flutter Initialization -->
   <script>
     window.addEventListener('load', function(ev) {
       _flutter.loader.loadEntrypoint({
         serviceWorker: {
           serviceWorkerVersion: serviceWorkerVersion,
         },
-        onEntrypointLoaded: function(engineInitializer) {
-          engineInitializer.initializeEngine().then(function(appRunner) {
-            appRunner.runApp();
+        onEntrypointLoaded: async function(engineInitializer) {
+          const appRunner = await engineInitializer.initializeEngine({
+            renderer: 'html'
           });
+          await appRunner.runApp();
         }
       });
     });
+  </script>
+
+  <script src="main.dart.js" type="application/javascript" defer></script>
+</head>
+<body>
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('flutter-first-frame', function () {
+        navigator.serviceWorker.register('/flutter_service_worker.js')
+          .then((registration) => {
+            console.log('Service worker registered');
+          })
+          .catch((error) => {
+            console.error('Service worker registration failed:', error);
+          });
+        
+        navigator.serviceWorker.register('/firebase-messaging-sw.js')
+          .then((registration) => {
+            console.log('Firebase messaging service worker registered');
+          })
+          .catch((error) => {
+            console.error('Firebase messaging service worker registration failed:', error);
+          });
+      });
+    }
   </script>
 </body>
 </html>

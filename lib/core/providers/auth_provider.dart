@@ -1,9 +1,15 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:commune/core/models/user.dart';
 import 'package:commune/core/services/auth_service.dart';
 
 final authStateProvider = StreamProvider<User?>((ref) {
-  return ref.read(authServiceProvider).authStateChanges();
+  try {
+    return ref.read(authServiceProvider).authStateChanges();
+  } catch (e) {
+    debugPrint('Auth state error: $e');
+    return Stream.value(null);
+  }
 });
 
 final authProvider = Provider<AuthService>((ref) {

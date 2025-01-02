@@ -5,6 +5,7 @@ import 'package:commune/core/providers/auth_provider.dart';
 import 'package:commune/core/constants/app_strings.dart';
 import 'package:commune/features/auth/widgets/profile_header.dart';
 import 'package:commune/features/official/widgets/official_menu.dart';
+import 'package:go_router/go_router.dart';
 
 class RightDrawer extends ConsumerWidget {
   const RightDrawer({super.key});
@@ -50,7 +51,10 @@ class RightDrawer extends ConsumerWidget {
         ListTile(
           leading: const Icon(Icons.login),
           title: const Text(AppStrings.login),
-          onTap: () => Navigator.pushNamed(context, '/login'),
+          onTap: () {
+            Navigator.pop(context); // Close drawer
+            GoRouter.of(context).go('/login'); // Use GoRouter's navigation
+          },
         ),
       ],
     );
