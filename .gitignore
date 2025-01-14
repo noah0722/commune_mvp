@@ -16,7 +16,6 @@ pubspec.lock
 .env
 google-services.json
 GoogleService-Info.plist
-firebase_options.dart
 key.properties
 android/app/google-services.json
 ios/Runner/GoogleService-Info.plist
